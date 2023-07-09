@@ -1,5 +1,6 @@
 from glob import glob
 import json
+import os
 import sys
 from typing import Literal, Union
 import torch
@@ -75,19 +76,19 @@ class Trainer:
 
         img_transforms = transforms.Compose(img_transforms)
         root_dir = glob("./uploads/*")[0]
-        dataset = ImageFolder(
+        self.dataset = ImageFolder(
             root=root_dir, transform=img_transforms, is_valid_file=self._is_valid_file
         )
 
         train_ratio = 0.7
         val_ratio = 0.1
 
-        train_size = int(len(dataset) * train_ratio)
-        val_size = int(len(dataset) * val_ratio)
-        test_size = len(dataset) - train_size - val_size
+        train_size = int(len(self.dataset) * train_ratio)
+        val_size = int(len(self.dataset) * val_ratio)
+        test_size = len(self.dataset) - train_size - val_size
 
         trainset, valset, testset = random_split(
-            dataset, [train_size, val_size, test_size]
+            self.dataset, [train_size, val_size, test_size]
         )
         self.train_loader = DataLoader(
             trainset, batch_size=32, shuffle=True, num_workers=8
@@ -107,10 +108,19 @@ class Trainer:
         # load model
         if self.arch == "alexnet":
             model = alexnet(weights=AlexNet_Weights.IMAGENET1K_V1, progress=True)
+            for param in model.parameters():
+                param.requires_grad = False
+            model.classifier[6] = torch.nn.Linear(4096, len(self.dataset.classes))
         elif self.arch == "resnet":
             model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2, progress=True)
+            for param in model.parameters():
+                param.requires_grad = False
+            model.fc = torch.nn.Linear(2048, len(self.dataset.classes))
         elif self.arch == "vgg":
             model = vgg16(weights=VGG16_Weights.IMAGENET1K_V1, progress=True)
+            for param in model.parameters():
+                param.requires_grad = False
+            model.classifier[6] = torch.nn.Linear(4096, len(self.dataset.classes))
         else:
             raise NotImplementedError("Model not implemented")
 
@@ -139,6 +149,13 @@ class Trainer:
                     self.progress.validationLoss = loss.item()
                     self.progress.stepsComplete += 1
                     self.send_progress()
+
+        self.progress.status = "complete"
+        self.send_progress()
+
+        # save the model
+        os.makedirs("./trained_model", exist_ok=True)
+        torch.save(model.state_dict(), "./trained_model/model.pth")
 
 
 def main():

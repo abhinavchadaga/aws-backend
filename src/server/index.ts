@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import trainRouter from './routes/train.js';
 import datasetRouter from './routes/dataset.js';
-import configureModelRouter from './routes/configureModel.js';
+import configureModelRouter from './routes/configureTraining.js';
+import downloadModelRouter from './routes/downloadModel.js';
 import setupTrainSock from './createTrainSock.js';
 import { TrainingConfig, TrainingProgress } from './types.js';
 import { createUploadFolder } from './routes/dataset.js';
@@ -33,5 +34,6 @@ app.use(createUploadFolder);
 app.use('/dataset', datasetRouter);
 app.use('/configure-training', configureModelRouter);
 app.use('/train', trainRouter);
+app.use('/download-model', downloadModelRouter);
 
 app.listen(expressPort, () => console.log(`Listening on port ${expressPort}`));
