@@ -88,12 +88,13 @@ router.post(
   checkAvailability,
   upload.single('dataset'),
   (req: Request, res: Response) => {
-    if (!req.file) {
+    const file = req.file;
+    if (file == null) {
       return res.status(400).json({ message: 'file upload failed' });
     }
 
     // unzip to same location and delete zip
-    if (req.file.mimetype === 'application/zip') {
+    if (file.mimetype === 'application/zip') {
       const files = fs.readdirSync(UPLOAD_DIR);
       const path_to_zip = path.join(UPLOAD_DIR, files[0]);
       fs.createReadStream(path_to_zip)
@@ -101,13 +102,13 @@ router.post(
         .on('close', () => {
           fs.unlinkSync(path_to_zip);
           return res.json({
-            message: `successfully uploaded ${req.file.originalname}`,
+            message: `successfully uploaded ${file.originalname}`,
           });
         });
     } else {
       // uploaded file was a csv file
       return res.json({
-        message: `successfully uploaded ${req.file.originalname}`,
+        message: `successfully uploaded ${file.originalname}`,
       });
     }
   },

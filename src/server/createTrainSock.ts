@@ -10,9 +10,10 @@ function setupSocket() {
 
   sock.on('message', (msg: string) => {
     const data = JSON.parse(msg) as TrainingProgress;
-    progress.epochsComplete = data.epochsComplete;
-    progress.trainingLoss = data.trainingLoss == null ? Infinity : data.trainingLoss;
-    progress.validationLoss = data.validationLoss == null ? Infinity : data.validationLoss;
+    progress.stepsComplete = data.stepsComplete;
+    progress.maxSteps = data.maxSteps;
+    progress.trainingLoss = data.trainingLoss;
+    progress.validationLoss = data.validationLoss;
     progress.status = data.status;
     console.log(progress);
   });

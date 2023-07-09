@@ -2,15 +2,23 @@ import express from 'express';
 import cors from 'cors';
 import trainRouter from './routes/train.js';
 import datasetRouter from './routes/dataset.js';
+import configureModelRouter from './routes/configureModel.js';
 import setupTrainSock from './createTrainSock.js';
-import { TrainingProgress } from './types.js';
+import { TrainingConfig, TrainingProgress } from './types.js';
 import { createUploadFolder } from './routes/dataset.js';
 
 export const progress: TrainingProgress = {
-  epochsComplete: 0,
+  stepsComplete: 0,
+  maxSteps: 0,
   trainingLoss: null,
   validationLoss: null,
   status: 'not started',
+};
+
+export const trainingConfig: TrainingConfig = {
+  modelArch: 'not configured',
+  numEpochs: '0',
+  learningRate: '0.0',
 };
 
 setupTrainSock();
@@ -23,6 +31,7 @@ app.use(cors());
 
 app.use(createUploadFolder);
 app.use('/dataset', datasetRouter);
+app.use('/configure-training', configureModelRouter);
 app.use('/train', trainRouter);
 
 app.listen(expressPort, () => console.log(`Listening on port ${expressPort}`));
