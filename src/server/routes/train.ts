@@ -1,7 +1,7 @@
-import express from 'express';
-import { Request, Response } from 'express';
+import express, { Request, Response } from 'express';
+import { progress, trainingConfig, trainingUpdateReceived } from '../index.js';
+
 import { spawn } from 'child_process';
-import { progress, trainingConfig } from '../index.js';
 
 const router = express.Router();
 
@@ -36,15 +36,14 @@ router.get('/status', (req: Request, res: Response) => {
 
   res.write(':ok\n\n');
 
-  const interval = setInterval(() => {
+  trainingUpdateReceived.on('update', () => {
+    res.write(`data: ${JSON.stringify(progress)}\n\n`);
     if (progress.status === 'complete') {
-      clearInterval(interval);
       res.write('data: complete\n\n');
       res.end();
       return;
     }
-    res.write(`data: ${JSON.stringify(progress)}\n\n`);
-  }, 2000);
+  });
 });
 
 export default router;

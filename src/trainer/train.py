@@ -31,7 +31,7 @@ class Progress(BaseModel):
 
 class TrainingConfig(BaseModel):
     modelArch: Literal["alexnet", "resnet", "vgg"]
-    numEpochs: int = Field(..., coerce=True)
+    maxEpochs: int = Field(..., coerce=True)
     learningRate: float = Field(..., coerce=True)
 
 
@@ -41,7 +41,7 @@ class Trainer:
         self.socket = context.socket(zmq.PUSH)
         self.socket.bind("tcp://127.0.0.1:8080")
         self.arch = config.modelArch
-        self.num_epochs = config.numEpochs
+        self.max_epochs = config.maxEpochs
         self.lr = config.learningRate
         self.train_loader = None
         self.val_loader = None
@@ -100,8 +100,8 @@ class Trainer:
             testset, batch_size=32, shuffle=False, num_workers=8
         )
         self.progress.maxSteps = (
-            len(self.train_loader) * self.num_epochs
-            + len(self.val_loader) * self.num_epochs
+            len(self.train_loader) * self.max_epochs
+            + len(self.val_loader) * self.max_epochs
         )
 
     def train(self):
@@ -127,9 +127,10 @@ class Trainer:
         # basic training loop
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr)
         criterion = torch.nn.CrossEntropyLoss()
-        for epoch in range(self.num_epochs):
+        for epoch in range(self.max_epochs):
             model.train()
             self.progress.status = "training"
+            self.send_progress()
             for i, (images, labels) in enumerate(self.train_loader):
                 optimizer.zero_grad()
                 outputs = model(images)
@@ -141,8 +142,9 @@ class Trainer:
                 self.send_progress()
 
             model.eval()
+            self.progress.status = "validating"
+            self.send_progress()
             with torch.no_grad():
-                self.progress.status = "validating"
                 for i, (images, labels) in enumerate(self.val_loader):
                     outputs = model(images)
                     loss = criterion(outputs, labels)

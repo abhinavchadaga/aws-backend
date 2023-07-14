@@ -7,13 +7,6 @@ import path from 'node:path';
 const UPLOAD_DIR = './uploads';
 const router = express.Router();
 
-/**
- * Ensures that the upload folder exists before any upload requests are handled
- *
- * @param _req Request object
- * @param _res Response object
- * @param next next middleware function to run
- */
 export function createUploadFolder(
   _req: Request,
   _res: Response,
@@ -23,30 +16,32 @@ export function createUploadFolder(
     console.log(`creating ${UPLOAD_DIR}...`);
     fs.mkdirSync(UPLOAD_DIR);
   }
+
+  const files = fs.readdirSync(UPLOAD_DIR);
+  files.forEach((file) => {
+    if (file === '.DS_Store') {
+      fs.unlinkSync(path.join(UPLOAD_DIR, file));
+    }
+
+    if (file === '__MACOSX') {
+      fs.rmSync(path.join(UPLOAD_DIR, file), { recursive: true });
+    }
+  });
+
   next();
 }
 
-// Multer storage object to place uploaded files
-// in the uploads folder and rename them with a timestamp
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, UPLOAD_DIR);
   },
   filename: function (req, file, cb) {
-    // create a new filename using the original file name and a timestamp
     const suffix = Date.now();
     const parsedFilename = path.parse(file.originalname);
     cb(null, `${parsedFilename.name}_${suffix}${parsedFilename.ext}`);
   },
 });
 
-/**
- * Multer file filter to only allow zip and csv files
- *
- * @param req Request
- * @param file Uploaded file
- * @param cb callback to call when file is accepted or rejected
- */
 function fileFilter(
   req: Request,
   file: Express.Multer.File,
@@ -62,19 +57,15 @@ function fileFilter(
   }
 }
 
-// multer object to handle uploads
 const upload = multer({ storage, fileFilter });
 
-/**
- * Allows only one user to be using server at a time
- * @param res Response object
- * @param req Request object
- * @param next next middleware function to run
- */
 function checkAvailability(req: Request, res: Response, next: NextFunction) {
   const uploads = fs.readdirSync(UPLOAD_DIR);
   if (uploads.length > 0) {
-    res.status(400).json({ message: 'server is busy! please try again later' });
+    res.status(400).json({
+      message: 'server is busy! please try again later',
+      files: uploads,
+    });
     return;
   }
   next();

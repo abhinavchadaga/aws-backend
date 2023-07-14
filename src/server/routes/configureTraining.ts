@@ -7,9 +7,9 @@ const router = express.Router();
 
 router.post('/', (req: Request, res: Response) => {
   if (TrainingConfig.guard(req.body)) {
-    const { modelArch, numEpochs, learningRate } = req.body;
+    const { modelArch, maxEpochs, learningRate } = req.body;
     trainingConfig.modelArch = modelArch;
-    trainingConfig.numEpochs = numEpochs;
+    trainingConfig.maxEpochs = maxEpochs;
     trainingConfig.learningRate = learningRate;
     res.json({
       message: 'Training config updated',
@@ -17,7 +17,7 @@ router.post('/', (req: Request, res: Response) => {
     });
     return;
   } else {
-    res.status(400).send('Invalid training config');
+    res.status(400).json({ message: 'Invalid training config' });
     return;
   }
 });

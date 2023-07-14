@@ -1,6 +1,7 @@
-import zmq from 'zeromq';
-import { progress } from './index.js';
+import { progress, trainingUpdateReceived } from './index.js';
+
 import { TrainingProgress } from './types.js';
+import zmq from 'zeromq';
 
 function setupSocket() {
   const sock = zmq.socket('pull');
@@ -16,6 +17,7 @@ function setupSocket() {
     progress.validationLoss = data.validationLoss;
     progress.status = data.status;
     console.log(progress);
+    trainingUpdateReceived.emit('update');
   });
 }
 

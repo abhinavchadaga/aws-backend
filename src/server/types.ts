@@ -25,7 +25,7 @@ const ModelArch = Union(
 
 export const TrainingConfig = Record({
   modelArch: ModelArch,
-  numEpochs: String.withConstraint((s) => !isNaN(Number(s)) && Number(s) > 0),
+  maxEpochs: String.withConstraint((s) => !isNaN(Number(s)) && Number(s) > 0),
   learningRate: String.withConstraint(
     (s) => !isNaN(Number(s)) && Number(s) > 0,
   ),
