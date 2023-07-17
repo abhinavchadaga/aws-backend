@@ -1,4 +1,4 @@
-import { Literal, Record, Static, Union, String } from 'runtypes';
+import { Literal, Record, Static, String, Union } from 'runtypes';
 
 type TrainingStatus =
   | 'not started'

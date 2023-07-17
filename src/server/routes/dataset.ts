@@ -1,8 +1,9 @@
-import fs from 'fs';
-import express, { Request, Response, NextFunction } from 'express';
-import unzipper from 'unzipper';
+import express, { NextFunction, Request, Response } from 'express';
 import multer, { FileFilterCallback } from 'multer';
+
+import fs from 'fs';
 import path from 'node:path';
+import unzipper from 'unzipper';
 
 const UPLOAD_DIR = './uploads';
 const router = express.Router();
